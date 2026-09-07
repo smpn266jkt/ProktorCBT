@@ -130,12 +130,24 @@
                     <table class="w-full text-left text-sm whitespace-nowrap" id="table-log-export">
                         <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-xs">
                             <tr>
-                                <th class="px-6 py-4">Waktu Akses</th>
-                                <th class="px-6 py-4">Username/NISN</th>
-                                <th class="px-6 py-4">Nama Peserta</th>
-                                <th class="px-6 py-4">Kelas</th>
-                                <th class="px-6 py-4 text-center">Total Login</th>
-                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-200 transition-colors group select-none" onclick="sortTable('waktu')" title="Urutkan Waktu">
+                                    <div class="flex items-center gap-2">Waktu Akses <span id="icon-waktu" class="sort-icon text-slate-400 group-hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg></span></div>
+                                </th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-200 transition-colors group select-none" onclick="sortTable('username')" title="Urutkan Username">
+                                    <div class="flex items-center gap-2">Username/NISN <span id="icon-username" class="sort-icon text-slate-400 group-hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg></span></div>
+                                </th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-200 transition-colors group select-none" onclick="sortTable('nama')" title="Urutkan Nama">
+                                    <div class="flex items-center gap-2">Nama Peserta <span id="icon-nama" class="sort-icon text-slate-400 group-hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg></span></div>
+                                </th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-200 transition-colors group select-none" onclick="sortTable('kelas')" title="Urutkan Kelas">
+                                    <div class="flex items-center gap-2">Kelas <span id="icon-kelas" class="sort-icon text-slate-400 group-hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg></span></div>
+                                </th>
+                                <th class="px-6 py-4 cursor-pointer hover:bg-slate-200 transition-colors group select-none text-center" onclick="sortTable('total')" title="Urutkan Total Login">
+                                    <div class="flex items-center justify-center gap-2">Total Login <span id="icon-total" class="sort-icon text-slate-400 group-hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg></span></div>
+                                </th>
+                                <th class="px-6 py-4 text-center cursor-pointer hover:bg-slate-200 transition-colors group select-none" onclick="sortTable('total')" title="Urutkan Status">
+                                    <div class="flex items-center justify-center gap-2">Status <span id="icon-status" class="sort-icon text-slate-400 group-hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg></span></div>
+                                </th>
                                 <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -178,6 +190,7 @@
         
         let currentDataLog = [];
         let modalConfirmCallback = null;
+        let currentSort = { column: '', asc: true }; 
 
         // --- SISTEM MODAL (Pengganti Alert & Confirm) ---
         function showModal(title, message, type = 'alert', callback = null) {
@@ -258,6 +271,74 @@
             } finally {
                 icon.classList.remove('animate-spin');
             }
+        }
+
+        // --- FUNGSI SORTING DATA ---
+        function sortTable(column) {
+            if (!currentDataLog || currentDataLog.length === 0) return;
+
+            // Tentukan arah sorting (Ascending / Descending)
+            if (currentSort.column === column) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort.column = column;
+                currentSort.asc = true; 
+            }
+
+            // Reset semua icon ke default (panah atas bawah)
+            const defaultIcon = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>`;
+            document.querySelectorAll('.sort-icon').forEach(el => {
+                el.innerHTML = defaultIcon;
+                el.classList.remove('text-blue-600');
+            });
+
+            // Set icon aktif (Panah atas atau bawah)
+            const activeIcon = document.getElementById(`icon-${column}`);
+            if (activeIcon) {
+                activeIcon.classList.add('text-blue-600');
+                activeIcon.innerHTML = currentSort.asc 
+                    ? `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>` // Up arrow
+                    : `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>`; // Down arrow
+            }
+            
+            // Duplikat array agar aman saat disortir
+            let dataToSort = [...currentDataLog];
+
+            // Lakukan pengurutan pada array
+            dataToSort.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                // Jika kolom total/status (diubah menjadi angka)
+                if (column === 'total' || column === 'status') {
+                    valA = Number(a.total) || 0;
+                    valB = Number(b.total) || 0;
+                } else if (column === 'waktu') {
+                    // Konversi format string "dd/MM/yyyy HH:mm:ss" ke angka komparasi "yyyyMMddHHmmss"
+                    const parseDate = (dStr) => {
+                        if(!dStr || dStr === "-") return "0";
+                        const parts = dStr.split(/[\s/:]/);
+                        if(parts.length >= 6) {
+                            return `${parts[2]}${parts[1]}${parts[0]}${parts[3]}${parts[4]}${parts[5]}`;
+                        }
+                        return dStr;
+                    };
+                    valA = parseDate(valA);
+                    valB = parseDate(valB);
+                } else {
+                    // Format String (Nama, Kelas, Username)
+                    valA = String(valA || "").toLowerCase();
+                    valB = String(valB || "").toLowerCase();
+                }
+
+                if (valA < valB) return currentSort.asc ? -1 : 1;
+                if (valA > valB) return currentSort.asc ? 1 : -1;
+                return 0;
+            });
+
+            // Update array referensi dan render ulang
+            currentDataLog = dataToSort;
+            renderTable(currentDataLog);
         }
 
         function renderTable(dataArray) {
