@@ -92,12 +92,18 @@
                     <p class="text-sm text-slate-500">Pantau siswa yang login ke aplikasi Exambro secara real-time.</p>
                 </div>
                 
-                <div class="flex gap-2 w-full sm:w-auto">
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                     <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari NISN / Nama..." class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm w-full sm:w-64">
                     
                     <button onclick="loadData()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors shadow-sm">
                         <svg id="refresh-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Segarkan
+                    </button>
+
+                    <!-- Tombol Reset Massal -->
+                    <button onclick="resetAllLogs()" class="bg-red-50 border border-red-300 hover:bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Reset Semua
                     </button>
                 </div>
             </div>
@@ -113,12 +119,13 @@
                                 <th class="px-6 py-4">Kelas</th>
                                 <th class="px-6 py-4 text-center">Total Login</th>
                                 <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4 text-center">Aksi</th> <!-- Kolom Baru -->
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
-                            <!-- Data akan dimuat disini oleh JavaScript -->
                             <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-slate-500">
+                                <!-- Colspan disesuaikan dari 6 ke 7 karena penambahan kolom Aksi -->
+                                <td colspan="7" class="px-6 py-10 text-center text-slate-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="loader mb-3 border-blue-500"></div>
                                         Memuat data login dari server...
@@ -141,25 +148,21 @@
     </main>
 
     <script>
-        // URL Google Apps Script yang Anda berikan
+        // URL Google Apps Script
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwgLPajObKSdO9JCZAYeTtGEVoQjxcnJibGZIrYEU2vErKwZ_O3CWy1w7-0uH6cB3I/exec";
 
         // Fungsi Switch Tab Menu
         function switchTab(tabName) {
-            // Update UI Navigasi
             document.getElementById('tab-admin').className = `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left font-medium ${tabName === 'admin' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`;
             document.getElementById('tab-log').className = `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left font-medium ${tabName === 'log' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`;
             
-            // Update Judul Header
             document.getElementById('page-title').innerText = tabName === 'admin' ? 'Panel Admin CBT' : 'Pemantauan Login';
 
-            // Sembunyikan semua view, tampilkan yang dipilih
             document.getElementById('view-admin').classList.add('hidden');
             document.getElementById('view-log').classList.add('hidden');
             
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
 
-            // Jika tab log dibuka, muat datanya otomatis
             if(tabName === 'log') {
                 loadData();
             }
@@ -170,23 +173,21 @@
             const tbody = document.getElementById('table-body');
             const icon = document.getElementById('refresh-icon');
             
-            // Tampilan Loading
             icon.classList.add('animate-spin');
-            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500"><div class="flex flex-col items-center justify-center"><div class="loader mb-3"></div>Menarik data terbaru...</div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500"><div class="flex flex-col items-center justify-center"><div class="loader mb-3"></div>Menarik data terbaru...</div></td></tr>`;
 
             try {
-                // Menambahkan parameter ?action=get_log ke URL Backend
                 const response = await fetch(GAS_URL + "?action=get_log");
                 const res = await response.json();
                 
                 if (res.status === 'success') {
                     renderTable(res.data);
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-red-500 font-medium bg-red-50">Error: ${res.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-red-500 font-medium bg-red-50">Error: ${res.message}</td></tr>`;
                 }
             } catch (error) {
                 console.error(error);
-                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-red-500 font-medium bg-red-50">Gagal terhubung ke Server Database. Periksa koneksi internet Anda.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-red-500 font-medium bg-red-50">Gagal terhubung ke Server Database. Periksa koneksi internet Anda.</td></tr>`;
             } finally {
                 icon.classList.remove('animate-spin');
             }
@@ -197,14 +198,13 @@
             const tbody = document.getElementById('table-body');
             
             if (!dataArray || dataArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 bg-slate-50">Belum ada aktivitas login dari siswa.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500 bg-slate-50">Belum ada aktivitas login dari siswa.</td></tr>`;
                 return;
             }
 
             let htmlString = "";
             
             dataArray.forEach(row => {
-                // Logika peringatan kecurangan (Lebih dari 3x login)
                 const isWarning = row.total > 3;
                 const rowClass = isWarning ? "bg-red-50 table-row-hover" : "table-row-hover";
                 const statusBadge = isWarning 
@@ -220,6 +220,9 @@
                         <td class="px-6 py-4">${row.kelas}</td>
                         <td class="px-6 py-4 text-center ${totalClass}">${row.total}x</td>
                         <td class="px-6 py-4 text-center">${statusBadge}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="resetLog('${row.username}', '${row.nama}')" class="text-xs font-semibold bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded shadow-sm transition-colors">Reset</button>
+                        </td>
                     </tr>
                 `;
             });
@@ -227,16 +230,64 @@
             tbody.innerHTML = htmlString;
         }
 
-        // Fungsi Pencarian Lokal (Client-side Search)
+        // Fungsi Reset Log Persiswa
+        async function resetLog(username, nama) {
+            if(!confirm(`Yakin ingin mereset sesi ujian untuk siswa: ${nama} (${username})?`)) return;
+            
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500"><div class="flex flex-col items-center justify-center"><div class="loader mb-3"></div>Mereset data login siswa...</div></td></tr>`;
+
+            try {
+                // Memanggil backend GAS dengan perintah reset_log dan membawa parameter username
+                const response = await fetch(GAS_URL + `?action=reset_log&username=${username}`);
+                const res = await response.json();
+                
+                if (res.status === 'success') {
+                    alert(`Data login untuk ${nama} berhasil direset.`);
+                } else {
+                    alert(`Gagal mereset: ${res.message || 'Error tidak diketahui.'}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Sinyal ke server gagal. Pastikan Backend GAS mendukung action=reset_log.');
+            } finally {
+                loadData(); // Segarkan kembali tabel setelah proses selesai
+            }
+        }
+
+        // Fungsi Reset Semua Log
+        async function resetAllLogs() {
+            if(!confirm('⚠️ PERINGATAN BAHAYA!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA data login siswa secara massal? Tindakan ini tidak dapat dibatalkan.')) return;
+            
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500"><div class="flex flex-col items-center justify-center"><div class="loader mb-3"></div>Mereset seluruh data login...</div></td></tr>`;
+
+            try {
+                // Memanggil backend GAS dengan perintah reset_all_log
+                const response = await fetch(GAS_URL + "?action=reset_all_log");
+                const res = await response.json();
+                
+                if (res.status === 'success') {
+                    alert('Seluruh data login siswa berhasil dikosongkan.');
+                } else {
+                    alert(`Gagal mereset: ${res.message || 'Error tidak diketahui.'}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Sinyal ke server gagal. Pastikan Backend GAS mendukung action=reset_all_log.');
+            } finally {
+                loadData(); // Segarkan kembali tabel setelah proses selesai
+            }
+        }
+
+        // Fungsi Pencarian Lokal
         function filterTable() {
             const input = document.getElementById("searchInput");
             const filter = input.value.toUpperCase();
             const tbody = document.getElementById("table-body");
             const tr = tbody.getElementsByTagName("tr");
 
-            // Loop semua row, sembunyikan yang tidak cocok
             for (let i = 0; i < tr.length; i++) {
-                // Abaikan row loading/error/empty state (jika tidak ada tag <td> lebih dari 1)
                 const tds = tr[i].getElementsByTagName("td");
                 if (tds.length < 2) continue; 
 
